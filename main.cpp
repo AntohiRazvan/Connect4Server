@@ -8,10 +8,14 @@ using namespace std;
 int main()
 {
 	game game1(1,2);
+	game1.insertDisc(7,1);
+	game1.insertDisc(1,2);
+	game1.insertDisc(1,1);
 	game1.draw();
-	sleep(4);
+	auto a = game1.serialize();
+	game1.deserialize(a);
 	game1.draw();
-	std::cout << '1';
+
 	return 0;
 }
 
