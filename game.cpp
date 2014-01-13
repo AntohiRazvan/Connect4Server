@@ -5,6 +5,7 @@ game::game(int play1, int play2){
 	player1Score = 0;
 	player2 = play2;
 	player2Score = 0;
+	currentPlayer = pickFirstPlayer();
 
 	for(int row = 0; row < nrRows; row++)
 		for(int column = 0; column < nrColumns; column++)
@@ -13,9 +14,21 @@ game::game(int play1, int play2){
 		}
 }
 
-void game::draw(){
-	std::cout << INDENT << " \033[31mPlayer 1\033[0m  " << player1Score << "  -  " << player2Score << "  \033[34mPlayer 2\033[0m" << std::endl << std::endl;
+void game::changePlayer(){
+	if(currentPlayer == 1)
+		currentPlayer = 2;
+	else
+		currentPlayer = 1;
+}
 
+int game::getCurrentPlayer(){
+	return currentPlayer;
+}
+
+void game::draw(){
+	std::cout << INDENT << " \033[31mPlayer 1\033[0m  " << player1Score << "  -  "
+				 << player2Score << "  \033[34mPlayer 2\033[0m" << std::endl;
+	std::cout << INDENT << INDENT << " Player " << currentPlayer << std::endl << std::endl;
 	std::cout << std::endl << INDENT << "_____________________________" << std::endl;
 	for(int row = 0; row < nrRows; row++)
 	{
@@ -110,6 +123,8 @@ char* game::serialize(){
 	size++;
 	packet[size] = (char)(((int)'0')+player2Score);
 	size++;
+	packet[size] = (char)(((int)'0')+currentPlayer);
+	size++;
 	for(int row = 0; row < nrRows; row++)
 		for(int column = 0; column < nrColumns; column++)
 		{
@@ -122,11 +137,12 @@ char* game::serialize(){
 void game::deserialize(char* packet){
 	player1Score = (int)(packet[0] - '0');
 	player2Score = (int)(packet[1] - '0');
+	currentPlayer = (int)(packet[2] - '0');
 	int row = -1;
 	int column = -1;
-	for(int index = 2; index < 44; index++)
+	for(int index = 3; index < GAME_DATA_LENGTH; index++)
 	{
-		if((index-2)%7 == 0)
+		if((index-3)%7 == 0)
 		{
 			row++;
 			column = 0;
@@ -134,4 +150,28 @@ void game::deserialize(char* packet){
 		gameTable[row][column] = packet[index];
 		column++;
 	}
+}
+
+void game::incrementScore(){
+	if(currentPlayer == 1)
+		player1Score++;
+	if(currentPlayer == 2)
+		player2Score++;
+}
+
+bool game::gameOver(){
+	if(player1Score >= NUMBER_OF_ROUNDS / 2 ||
+		player2Score >= NUMBER_OF_ROUNDS / 2 )
+		return true;
+	return false;
+}
+
+void game::resetBoard(){
+	currentPlayer = pickFirstPlayer();
+
+	for(int row = 0; row < nrRows; row++)
+		for(int column = 0; column < nrColumns; column++)
+		{
+			this->gameTable[row][column] = ' ';
+		}
 }

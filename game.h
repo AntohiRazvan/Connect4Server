@@ -9,6 +9,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define NUMBER_OF_ROUNDS 3
+#define GAME_DATA_LENGTH 45
+
 const int nrRows = 6;
 const int nrColumns = 7;
 
@@ -21,18 +24,27 @@ class game
 	char gameTable[nrRows][nrColumns];
 	int currentPlayer;
 
-	int pickFirstPlayer();
+	static int pickFirstPlayer();
 	static bool isLineStartingAt(int x, int y,  char gameTable[][7]);
 	static bool lineMatch(int x, int y, int stepX, int stepY, char gameTable[][7]);
 	static bool canInsert(int x, int y, char gameTable[][7]);
 public:
-	game(int play1, int play2);
+	game(int play1 = 1, int play2 = 2);
+
 	void draw();
 	void clearScreen();
-	bool winCondition();
-	bool insertDisc(int column, int player);
-	char* serialize();
 	void deserialize(char *packet);
+	void changePlayer();
+	void incrementScore();
+	void resetBoard();
+
+	bool insertDisc(int column, int player);
+	bool winCondition();
+	bool gameOver();
+
+	char* serialize();
+
+	int getCurrentPlayer();
 };
 
 #endif // GAME_H

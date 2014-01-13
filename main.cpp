@@ -7,15 +7,9 @@ using namespace std;
 
 int main()
 {
-	game game1(1,2);
-	game1.insertDisc(7,1);
-	game1.insertDisc(1,2);
-	game1.insertDisc(1,1);
-	game1.draw();
-	auto a = game1.serialize();
-	game1.deserialize(a);
-	game1.draw();
-
+	networking net;
+	net.createSocket();
+	net.startServer();
 	return 0;
 }
 
