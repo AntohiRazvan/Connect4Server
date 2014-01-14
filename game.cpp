@@ -109,10 +109,12 @@ bool game::insertDisc(int column, int player){
 	{
 		if( canInsert(row, column, gameTable))
 		{
+			draw();
 			gameTable[row][column] = (char)(((int)'0')+player);
 			return true;
 		}
 	}
+	draw();
 	return false;
 }
 
