@@ -13,4 +13,3 @@ SOURCES += main.cpp \
 HEADERS += \
     networking.h \
     game.h
-

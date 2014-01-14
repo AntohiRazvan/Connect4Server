@@ -40,10 +40,10 @@ class networking
 
 	static void *createGame(void *arg);
 	static void sendGameState(gameData gd, char* state);
-	static void sendGameOverCheck(gameData gd, bool gameOver);
-	static void sendRoundOverCheck(gameData gd, bool roundOver);
+	static bool gameOverCheck(gameData gd, game Game);
+	static bool winConditionCheck(gameData gd, game Game);
 	static void notifyPlayers(gameData gd);
-	static int getMove(gameData gd, int currentPlayer);
+	static void getMove(gameData gd, game &Game);
 
 public:
 	networking();

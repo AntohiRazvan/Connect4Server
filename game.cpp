@@ -150,18 +150,19 @@ void game::deserialize(char* packet){
 		gameTable[row][column] = packet[index];
 		column++;
 	}
+
 }
 
 void game::incrementScore(){
 	if(currentPlayer == 1)
-		player1Score++;
-	if(currentPlayer == 2)
 		player2Score++;
+	if(currentPlayer == 2)
+		player1Score++;
 }
 
 bool game::gameOver(){
-	if(player1Score >= NUMBER_OF_ROUNDS / 2 ||
-		player2Score >= NUMBER_OF_ROUNDS / 2 )
+	if(player1Score > (float)NUMBER_OF_ROUNDS / 2 ||
+		player2Score > (float)NUMBER_OF_ROUNDS / 2 )
 		return true;
 	return false;
 }
@@ -169,6 +170,7 @@ bool game::gameOver(){
 void game::resetBoard(){
 	currentPlayer = pickFirstPlayer();
 
+	memset(gameTable, 0, 42);
 	for(int row = 0; row < nrRows; row++)
 		for(int column = 0; column < nrColumns; column++)
 		{

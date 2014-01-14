@@ -44,7 +44,6 @@ int networking::createSocket(){
 void networking::startServer(){
 	while (1)
 	{
-
 		int client;
 		gameData* gd; //parametru functia executata de thread
 		socklen_t length = sizeof (from);
@@ -67,13 +66,13 @@ void networking::startServer(){
 			gd->player2 = clients.back();
 			clients.pop_back();
 			gd->idThread = threadCounter++;
-			if(threadCounter<100)
+			if(threadCounter < MAX_NR_THREADS)
 			{
 				pthread_create(&threads[threadCounter], NULL, createGame, gd);
 			}
 			else
 			{
-				perror("Numarul maxim de jocuri simultane atins.");
+				std::cout << "Numarul maxim de jocuri simultane atins.";
 				break;
 			}
 		}
@@ -86,16 +85,17 @@ void* networking::createGame(void *arg){
 	game Game;
 	pthread_detach(pthread_self());
 	notifyPlayers(gd);
-	while(!Game.gameOver())
+	while(!gameOverCheck(gd, Game))
 	{
-		while(!Game.winCondition())
+		while(!winConditionCheck(gd, Game))
 		{
 			sendGameState(gd, Game.serialize());
-			Game.insertDisc(getMove(gd, Game.getCurrentPlayer()), Game.getCurrentPlayer());
+			getMove(gd, Game);
 			Game.changePlayer();
 		}
 		Game.incrementScore();
 		Game.resetBoard();
+		sendGameState(gd, Game.serialize());
 	}
 	close(gd.player1);
 	close(gd.player2);
@@ -103,15 +103,13 @@ void* networking::createGame(void *arg){
 }
 
 void networking::notifyPlayers(gameData gd){
-	char *message_player1 = new char;
-	char *message_player2 = new char;
-	strcpy(message_player1, "Game started you are player 1.");
-	strcpy(message_player2, "Game started you are player 2.");
-	if(write(gd.player1, message_player1, strlen(message_player1)) == -1)
+	int message_player1 = 1;
+	int message_player2 = 2;
+	if(write(gd.player1, &message_player1, sizeof(int)) == -1)
 	{
 		perror("[server]Eroare la scriere in socket");
 	}
-	if(write(gd.player2, message_player2, strlen(message_player2)) == -1)
+	if(write(gd.player2, &message_player2, sizeof(int)) == -1)
 	{
 		perror("[server]Eroare la scriere in socket");
 	}
@@ -128,23 +126,78 @@ void networking::sendGameState(gameData gd, char* state){
 	}
 }
 
-int networking::getMove(gameData gd, int currentPlayer){
+void networking::getMove(gameData gd, game &Game){
 	int position;
-	if(currentPlayer == 1)
+	bool response;
+	if(Game.getCurrentPlayer() == 1)
 	{
 		if(read(gd.player1, &position, sizeof(int)) == -1)
 		{
 			perror("[server]Eroare la citire din socket");
+		}
+		while(!(response = Game.insertDisc(position, Game.getCurrentPlayer())))
+		{
+			if(write(gd.player1, &response, sizeof(bool)) == -1)
+			{
+				perror("[server]Eroare la scriere in socket");
+			}
+			if(read(gd.player1, &position, sizeof(int)) == -1)
+			{
+				perror("[server]Eroare la citire din socket");
 
+			}
+		}
+		if(write(gd.player1, &response, sizeof(bool)) == -1)
+		{
+			perror("[server]Eroare la scriere in socket");
 		}
 	}
-	else
+	else if(Game.getCurrentPlayer() == 2)
 	{
 		if(read(gd.player2, &position, sizeof(int)) == -1)
 		{
 			perror("[server]Eroare la citire din socket");
 		}
+		while(!(response = Game.insertDisc(position, Game.getCurrentPlayer())))
+		{
+			if(write(gd.player2, &response, sizeof(bool)) == -1)
+			{
+				perror("[server]Eroare la scriere in socket");
+			}
+			if(read(gd.player2, &position, sizeof(int)) == -1)
+			{
+				perror("[server]Eroare la citire din socket");
+			}
+		}
+		if(write(gd.player2, &response, sizeof(bool)) == -1)
+		{
+			perror("[server]Eroare la scriere in socket");
+		}
 	}
-	return position;
 }
 
+bool networking::gameOverCheck(gameData gd, game Game){
+	bool gameOver = Game.gameOver();
+	if(write(gd.player1, &gameOver, sizeof(bool)) == -1)
+	{
+		perror("[server]Eroare la scriere in socket");
+	}
+	if(write(gd.player2, &gameOver, sizeof(bool)) == -1)
+	{
+		perror("[server]Eroare la scriere in socket");
+	}
+	return gameOver;
+}
+
+bool networking::winConditionCheck(gameData gd, game Game){
+	bool winCondition = Game.winCondition();
+	if(write(gd.player1, &winCondition, sizeof(bool)) == -1)
+	{
+		perror("[server]Eroare la scriere in socket");
+	}
+	if(write(gd.player2, &winCondition, sizeof(bool)) == -1)
+	{
+		perror("[server]Eroare la scriere in socket");
+	}
+	return winCondition;
+}
